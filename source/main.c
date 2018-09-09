@@ -4,7 +4,21 @@
 
 //This include a header containing definitions of our image
 #include "Scale_bgr.h"
-#include "../expression_parser/code/expression_parser.h"
+
+#include "tinyexpr.h"
+
+bool StartsWith(const char *a, const char *b) {
+	if(strncmp(a, b, strlen(b)) == 0) return 1;
+	return 0;
+}
+
+char* replace_char(char* str, char find, char replace){
+	char *current_pos = strchr(str,find);
+	while (current_pos){
+		*current_pos = replace;
+		current_pos = strchr(current_pos,find);
+	}
+}
 
 int main(int argc, char **argv)
 {
@@ -68,6 +82,24 @@ int main(int argc, char **argv)
 			formula = formulas[selectedline-1];
 			printf("\x1b[%d;1H                                        ", maxline+1);
 			printf("\x1b[%d;1HLoaded %s!", maxline+1, formula);
+			
+			// Calculate
+			if(StartsWith(formula, "x=")) {
+				formula += 2;
+				for(double y = -12; y <= 12; y+=.1) {
+					char *newformula = replace_char(formula, "y", y);
+					double x;
+					x = te_interp(newformula, 0);
+				}
+			} else if(StartsWith(formula, "y=")) {
+				formula += 2;
+				for(float x = -20; x <= 20; x+=.1) {
+					char *newformula = replace_char(formula, "x", x);
+					double y;
+					y = te_interp(newformula, 0);
+				}
+			} else
+				printf("\x1b[%d;1HInvalid formula, make sure it starts with 'x=' or 'y='", maxline+1);
 		}
 
 		// Flush and swap framebuffers
