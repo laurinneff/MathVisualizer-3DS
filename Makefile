@@ -32,6 +32,9 @@ SOURCES		:=	source
 DATA		:=
 INCLUDES	:=	include
 GRAPHICS	:=	gfx
+APP_TITLE	:=	MathVisualizer
+APP_DESCRIPTION	:=	Enter Formulas and get a graphical representaion of them
+APP_AUTHOR	:=	Laurin Neff
 
 #---------------------------------------------------------------------------------
 # options for code generation
