@@ -1,5 +1,4 @@
 build
-#MathVisualizer.3dsx
-#MathVisualizer.smdh
-#MathVisualizer.elf
-
+MathVisualizer.3dsx
+MathVisualizer.smdh
+MathVisualizer.elf

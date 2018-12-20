@@ -26,15 +26,15 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
-BUILD		:=	build
-SOURCES		:=	source
-DATA		:=
-INCLUDES	:=	include
-GRAPHICS	:=	gfx
-APP_TITLE	:=	MathVisualizer
+TARGET			:=	$(notdir $(CURDIR))
+BUILD			:=	build
+SOURCES			:=	source
+DATA			:=
+INCLUDES		:=	include
+GRAPHICS		:=	gfx
+APP_TITLE		:=	MathVisualizer
 APP_DESCRIPTION	:=	Enter Formulas and get a graphical representaion of them
-APP_AUTHOR	:=	Laurin Neff
+APP_AUTHOR		:=	Laurin Neff
 
 #---------------------------------------------------------------------------------
 # options for code generation
