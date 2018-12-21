@@ -2,3 +2,5 @@ build
 MathVisualizer.3dsx
 MathVisualizer.smdh
 MathVisualizer.elf
+.vscode/c_cpp_properties.json
+.vscode/settings.json
