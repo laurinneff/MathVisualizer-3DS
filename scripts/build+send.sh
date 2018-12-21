@@ -1,3 +1,8 @@
 #!/bin/bash
 make
-3dslink -a 192.168.1.46 MathVisualizer.3dsx
+if [ $? -eq 0 ]
+then
+    3dslink MathVisualizer.3dsx
+else
+    echo "There was an error while building, not sending to 3DS"
+fi
