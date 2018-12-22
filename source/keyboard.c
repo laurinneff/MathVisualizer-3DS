@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include "consts.h"
 
 char *keyboard()
 {
@@ -24,6 +25,7 @@ char *keyboard()
 
     for (int i = 0; i < 29; i++)
         printf("\x1b[%d;1H                                        ", i + 1);
+    printf("\x1b[28;1Hv%s (%s %s)", VERSION_NUM, __DATE__, __TIME__);
     printf("\x1b[29;5HPress Select to close keyboard.");
 
     while (entering)
@@ -106,5 +108,6 @@ char *keyboard()
     }
     for (int i = 0; i < 29; i++)
         printf("\x1b[%d;1H                                        ", i + 1);
+    printf("\x1b[28;1Hv%s (%s %s)", VERSION_NUM, __DATE__, __TIME__);
     return text;
 }

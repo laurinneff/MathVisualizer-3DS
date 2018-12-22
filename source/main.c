@@ -6,7 +6,7 @@
 //This include a header containing definitions of our image
 #include "Scale_bgr.h"
 #include "tinyexpr.h"
-//#include "keyboard.h"
+#include "main.h"
 
 int maxline = 0;
 
@@ -29,6 +29,7 @@ int main(int argc, char **argv)
 	//Initialize console on bottom screen. Using NULL as the second argument tells the console library to use the internal console structure as current one
 	consoleInit(GFX_BOTTOM, NULL);
 
+	printf("\x1b[28;1Hv%s (%s %s)", VERSION_NUM, __DATE__, __TIME__);
 	printf("\x1b[30;10HPress Start to exit.");
 
 	//We don't need double buffering in this example. In this way we can draw our image only once on screen.
@@ -43,12 +44,27 @@ int main(int argc, char **argv)
 	memcpy(fbTop, Scale_bgr, Scale_bgr_size);
 
 	int selectedline = 1;
-	char *formulas[20];
-	for (int i = 0; i < 20; i++)
+	FILE *lastFormulas;
+	char formulas[20][39];
+	lastFormulas = fopen("lastFormulas.txt", "r");
+	if (lastFormulas != NULL)
 	{
-		formulas[i] = "";
+
+		int i = 0;
+		for (i = 0; i < 20; i++)
+		{
+			formulas[i][0] = 0;
+		}
+		i = 0;
+		while (i < 20 && fgets(&formulas[i], 38, lastFormulas))
+		{
+			i++;
+		}
+		maxline = i;
+		//printf("\x1b[%d;1H%d", maxline + 5, i);
+
+		fclose(lastFormulas);
 	}
-	char *formula = "";
 	bool fast = true;
 
 	printf("\x1b[%d;1H[Y]Disable fast mode (more pixels, slow)", maxline + 3);
@@ -89,18 +105,21 @@ int main(int argc, char **argv)
 		if (kDown & KEY_X)
 		{
 			char *res = keyboard();
-			if (maxline < 20)
+			if (*res)
 			{
-				maxline++;
-			}
-			for (int i = 18; i >= 0; i--)
-			{
-				formulas[i + 1] = formulas[i];
-			}
-			formulas[0] = res;
+				if (maxline < 20)
+				{
+					maxline++;
+				}
+				for (int i = 18; i >= 0; i--)
+				{
+					strcpy(formulas[i + 1], formulas[i]);
+				}
+				strcpy(formulas[0], res);
 
-			if (res == "§")
-				break;
+				if (res == "§")
+					break;
+			}
 
 			if (fast)
 				printf("\x1b[%d;1H[Y]Disable fast mode (more pixels, slow)", maxline + 3);
@@ -141,6 +160,14 @@ int main(int argc, char **argv)
 		//Wait for VBlank
 		gspWaitForVBlank();
 	}
+	lastFormulas = fopen("lastFormulas.txt", "w");
+	for (int i = 0; i < maxline; i++)
+	{
+		fprintf(lastFormulas, "%s", formulas[i]);
+		if (i < maxline - 1)
+			fprintf(lastFormulas, "\n");
+	}
+	fclose(lastFormulas);
 
 	// Exit services
 	gfxExit();
@@ -276,7 +303,7 @@ void drawFormula(char *formula, u8 *fbTop, bool fast)
 		}
 	}
 	else
-		printf("\x1b[%d;1HInvalid formula, make sure it starts with 'x=' or 'y=' '%s'", maxline + 1, formula);
+		printf("\x1b[%d;1HInvalid formula, make sure it starts with 'x=' or 'y='", maxline + 1);
 
 	memcpy(fbTop, tempFb, Scale_bgr_size);
 }
