@@ -18,7 +18,6 @@ bool StartsWith(const char *a, const char *b)
 }
 
 char *stringReplace(char *, char *, char *);
-
 void drawPixel(u16, u16, u8, u8, u8, u8 *);
 void drawFormula(char *, u8 *, bool);
 
@@ -50,7 +49,7 @@ int main(int argc, char **argv)
 	if (lastFormulas != NULL)
 	{
 
-		int i = 0;
+		int i;
 		for (i = 0; i < 20; i++)
 		{
 			formulas[i][0] = 0;
@@ -60,7 +59,13 @@ int main(int argc, char **argv)
 		{
 			i++;
 		}
+
 		maxline = i;
+		for (i = 0; i < maxline; i++)
+		{
+			if (formulas[i][strlen(formulas[i]) - 1] == '\n')
+				formulas[i][strlen(formulas[i]) - 1] = 0;
+		}
 		//printf("\x1b[%d;1H%d", maxline + 5, i);
 
 		fclose(lastFormulas);
@@ -69,6 +74,7 @@ int main(int argc, char **argv)
 
 	printf("\x1b[%d;1H[Y]Disable fast mode (more pixels, slow)", maxline + 3);
 	printf("\x1b[%d;1H[X]Open Keyboard", maxline + 4);
+	printf("\x1b[%d;1H[B]Clear List", maxline + 5);
 	printf("\x1b[%d;1HReady!", maxline + 1);
 
 	// Main loop
@@ -105,7 +111,7 @@ int main(int argc, char **argv)
 		if (kDown & KEY_X)
 		{
 			char *res = keyboard();
-			if (*res)
+			if (*res && (StartsWith(res, "x=") || StartsWith(res, "y=")))
 			{
 				if (maxline < 20)
 				{
@@ -120,12 +126,15 @@ int main(int argc, char **argv)
 				if (res == "§")
 					break;
 			}
+			else
+				printf("\x1b[%d;1HInvalid formula, make sure it starts with 'x=' or 'y='", maxline + 1);
 
 			if (fast)
 				printf("\x1b[%d;1H[Y]Disable fast mode (more pixels, slow)", maxline + 3);
 			else
 				printf("\x1b[%d;1H[Y]Enable fast mode (less pixels, fast)", maxline + 3);
 			printf("\x1b[%d;1H[X]Open Keyboard", maxline + 4);
+			printf("\x1b[%d;1H[B]Clear List", maxline + 5);
 			for (int currentline = 1; currentline <= maxline; currentline++)
 			{
 				printf("\x1b[%d;1H                                        ", currentline);
@@ -151,6 +160,29 @@ int main(int argc, char **argv)
 		if (kDown & KEY_A)
 		{
 			drawFormula(formulas[selectedline - 1], fbTop, fast);
+		}
+
+		if (kDown & KEY_B)
+		{
+			maxline = 0;
+			memcpy(fbTop, Scale_bgr, Scale_bgr_size);
+			for (int i = 0; i < 29; i++)
+				printf("\x1b[%d;1H                                        ", i + 1);
+			if (fast)
+				printf("\x1b[%d;1H[Y]Disable fast mode (more pixels, slow)", maxline + 3);
+			else
+				printf("\x1b[%d;1H[Y]Enable fast mode (less pixels, fast)", maxline + 3);
+			printf("\x1b[%d;1H[X]Open Keyboard", maxline + 4);
+			printf("\x1b[%d;1H[B]Clear List", maxline + 5);
+			for (int currentline = 1; currentline <= maxline; currentline++)
+			{
+				printf("\x1b[%d;1H                                        ", currentline);
+				if (currentline == selectedline)
+					printf("\x1b[%d;1H\x1b[47;30m%s\x1b[0m", currentline, formulas[currentline - 1]);
+				else
+					printf("\x1b[%d;1H%s", currentline, formulas[currentline - 1]);
+			}
+			printf("\x1b[%d;1HReady!", maxline + 1);
 		}
 
 		// Flush and swap framebuffers
@@ -239,22 +271,23 @@ void drawFormula(char *formula, u8 *fbTop, bool fast)
 	if (fast)
 		increment = .02;
 	else
-		increment = .001;
+		increment = .0001;
+
+	formula += 2;
+
+	double x, y;
+
+	te_variable vars[] = {{"x", &x}, {"y", &y}};
+
+	int err;
+	te_expr *expr = te_compile(formula, vars, 2, &err);
 
 	// Calculate
-	//if (StartsWith(formula, "x="))
-	if (formula[0] == 'x' && formula[1] == '=')
+	if (StartsWith(formula - 2, "x="))
 	{
-		formula += 2;
-		char newformula[128];
-		char replace[128];
-		for (float y = -12; y <= 12.1; y += increment)
+		for (y = -12; y <= 12.1; y += increment)
 		{
-			strcpy(&newformula, formula);
-			sprintf(&replace, "%.2f", y);
-			stringReplace("y", replace, newformula);
-			double x;
-			x = te_interp(newformula, 0);
+			x = te_eval(expr);
 
 			int sx, sy;
 			sx = (x + 20) * 10 + 1.5;
@@ -268,22 +301,14 @@ void drawFormula(char *formula, u8 *fbTop, bool fast)
 				sy = 1;
 			if (sy > 240)
 				sy = 240;
-			//if((0 < sx && sx <= 400) && (0 < sy && sx <= 240))
 			drawPixel(sx, sy, 0xFF, 0xFF, 0xFF, tempFb);
 		}
 	}
-	else if (StartsWith(formula, "y="))
+	else if (StartsWith(formula - 2, "y="))
 	{
-		formula += 2;
-		char newformula[128];
-		char replace[128];
-		for (float x = -20; x <= 20.1; x += increment)
+		for (x = -20; x <= 20.1; x += increment)
 		{
-			strcpy(&newformula, formula);
-			sprintf(&replace, "%.2f", x);
-			stringReplace("x", replace, newformula);
-			double y;
-			y = te_interp(newformula, 0);
+			y = te_eval(expr);
 
 			int sx, sy;
 			sx = (x + 20) * 10 + 1.5;
@@ -298,7 +323,6 @@ void drawFormula(char *formula, u8 *fbTop, bool fast)
 			if (sy > 240)
 				sy = 240;
 
-			//if((0 < sx && sx <= 400) && (0 < sy && sy <= 240))
 			drawPixel(sx, sy, 0xFF, 0xFF, 0xFF, tempFb);
 		}
 	}
@@ -306,4 +330,5 @@ void drawFormula(char *formula, u8 *fbTop, bool fast)
 		printf("\x1b[%d;1HInvalid formula, make sure it starts with 'x=' or 'y='", maxline + 1);
 
 	memcpy(fbTop, tempFb, Scale_bgr_size);
+	free(tempFb);
 }

@@ -7,7 +7,6 @@
 
 char *keyboard()
 {
-    bool entering = true;
     char *text;
     int selx = 0;
     int sely = 0;
@@ -28,10 +27,11 @@ char *keyboard()
     printf("\x1b[28;1Hv%s (%s %s)", VERSION_NUM, __DATE__, __TIME__);
     printf("\x1b[29;5HPress Select to close keyboard.");
 
-    while (entering)
+    while (aptMainLoop())
     {
         hidScanInput();
         u32 kDown = hidKeysDown();
+
         if (kDown & KEY_START)
         {
             text = "§";
@@ -42,7 +42,7 @@ char *keyboard()
         {
             if (!text)
                 text = "";
-            entering = false;
+            break;
         }
 
         if (kDown & KEY_A)
@@ -75,13 +75,15 @@ char *keyboard()
         if (kDown & KEY_RIGHT)
             selx++;
         if (selx < 0)
-            selx = 0;
-        if (selx >= KBWIDTH)
             selx = KBWIDTH - 1;
+        if (selx >= KBWIDTH)
+            selx = 0;
         if (sely < 0)
-            sely = 0;
-        if (sely >= KBHEIGHT)
             sely = KBHEIGHT - 1;
+        if (sely >= KBHEIGHT)
+            sely = 0;
+        if ((sely == 4) && (selx > 4) && (kDown & KEY_RIGHT))
+            selx = 0;
         if ((sely == 4) && (selx > 4))
             selx = 4;
 
@@ -106,8 +108,22 @@ char *keyboard()
         //Wait for VBlank
         gspWaitForVBlank();
     }
+
+    // Flush and swap framebuffers
+    gfxFlushBuffers();
+    gfxSwapBuffers();
+
+    //Wait for VBlank
+    gspWaitForVBlank();
     for (int i = 0; i < 29; i++)
         printf("\x1b[%d;1H                                        ", i + 1);
     printf("\x1b[28;1Hv%s (%s %s)", VERSION_NUM, __DATE__, __TIME__);
+
+    // Flush and swap framebuffers
+    gfxFlushBuffers();
+    gfxSwapBuffers();
+
+    //Wait for VBlank
+    gspWaitForVBlank();
     return text;
 }
