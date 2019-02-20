@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Build Code') {
       steps {
-        sh 'make'
+        bat(script: 'build.bat', returnStdout: true)
       }
     }
   }
