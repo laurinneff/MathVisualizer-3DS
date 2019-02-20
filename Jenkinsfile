@@ -7,4 +7,7 @@ pipeline {
       }
     }
   }
+  environment {
+    path = 'c:\\devkitPro\\msys2\\usr\\bin\\'
+  }
 }
