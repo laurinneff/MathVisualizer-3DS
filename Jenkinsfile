@@ -10,5 +10,6 @@ pipeline {
   environment {
     path = 'c:\\devkitPro\\msys2\\usr\\bin\\;c:\\windows\\system32'
     DEVKITARM = 'C:\\devkitPro\\devkitARM'
+    DEVKITPRO = 'C:\\devkitPro'
   }
 }
