@@ -8,6 +8,6 @@ pipeline {
     }
   }
   environment {
-    path = 'c:\\devkitPro\\msys2\\usr\\bin\\'
+    path = 'c:\\devkitPro\\msys2\\usr\\bin\\;c:\\windows\\system32'
   }
 }
